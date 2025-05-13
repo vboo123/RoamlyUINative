@@ -35,11 +35,14 @@ const interests = [
   'Adventure',
   'Beaches',
   'Architecture',
+  'Fitness',
+  'Travel',
+  'Technology',
 ];
 
 export default function Register() {
   const theme = useTheme();
-  const { setUser } = useAuth();
+  const { login } = useAuth();
 
   const [form, setForm] = useState({
     name: '',
@@ -93,10 +96,10 @@ export default function Register() {
 
       const payload = {
         name: form.name,
-        email: form.email,
+        email: form.email.toLowerCase().trim(),
         country: form.country,
         language: form.language,
-        age: parseInt(form.age),
+        age: form.age,
         interestOne: selectedInterests[0],
         interestTwo: selectedInterests[1],
         interestThree: selectedInterests[2],
@@ -105,7 +108,7 @@ export default function Register() {
       const res = await axios.post('https://roamlyservice.onrender.com/register-user/', payload);
 
       const userWithId = { ...payload, user_id: res.data.user_id };
-      setUser(userWithId);
+      await login(userWithId.name, userWithId.email);
       router.replace('/');
     } catch (err) {
       console.error(err);

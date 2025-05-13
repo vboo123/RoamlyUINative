@@ -63,6 +63,8 @@ export default function ExploreScreen() {
           },
         });
 
+        console.log(response.data)
+
         setProperties(response.data.properties || []);
       } catch (err) {
         console.error('❌ Failed to fetch landmarks', err);
@@ -95,12 +97,7 @@ export default function ExploreScreen() {
           onPress={() =>
             router.push({
               pathname: '/details/[landmarkId]',
-              params: { landmarkId: item.landmarkName },
-              query: {
-                geohash: item.geohash,
-                city: item.city,
-                country: item.country,
-              }
+              params: { landmarkId: item.landmarkName, geohash: item.geohash, country: item.country, city: item.city },
             })
           }            
                   >

@@ -12,22 +12,26 @@ export default function LandmarkDetail() {
   const params = useLocalSearchParams();
   const { landmarkId, geohash, city, country } = params;
   console.log(landmarkId)
+  console.log(geohash)
+  console.log(city)
+  console.log(country)
 
   const [loading, setLoading] = useState(true);
   const [textResponse, setTextResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("entering here...")
     const fetchResponse = async () => {
       try {
         const response = await axios.get('https://roamlyservice.onrender.com/landmark-response', {
           params: {
             landmark: landmarkId,
             geohash,
-            userCountry: user.country,
-            interestOne: user.interestOne,
-            interestTwo: user.interestTwo,
-            interestThree: user.interestThree,
+            userCountry: user?.country,
+            interestOne: user?.interestOne,
+            interestTwo: user?.interestTwo,
+            interestThree: user?.interestThree,
           },
         });
 

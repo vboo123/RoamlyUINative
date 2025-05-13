@@ -195,7 +195,21 @@ export default function Register() {
         {loading ? 'Registering...' : 'Register'}
       </Button>
 
+      <View style={{ marginTop: 24, alignItems: 'center' }}>
+        <Text>
+          Already have an account?{' '}
+          <Text
+            onPress={() => router.replace('/sign-in')}
+            style={{ color: theme.colors.primary, textDecorationLine: 'underline' }}
+          >
+            Log in
+          </Text>
+        </Text>
+    </View>
+
+
       {loading && <ActivityIndicator animating={true} style={{ marginTop: 20 }} />}
     </ScrollView>
+    
   );
 }

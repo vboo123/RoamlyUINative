@@ -1,41 +1,44 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+// context/AuthContext.tsx
+import { createContext, useContext, useState } from 'react';
+import axios from 'axios';
 
 interface User {
   id: string;
   name: string;
+  email: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: () => void;
+  login: (name: string, email: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  login: () => {},
+  login: async () => {},
   logout: () => {},
-  loading: true,
+  loading: false,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Simulate async auth check (e.g., from SecureStore or Firebase)
-    const checkAuth = async () => {
-      // await something like getTokenFromStorage()
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // simulate delay
-      setUser(null); // or setUser({ id: '123', name: 'Vaibhav' }) if auto-login
+  const login = async (name: string, email: string) => {
+    setLoading(true);
+    try {
+      const res = await axios.get('https://roamlyservice.onrender.com/login', {
+        params: { name, email },
+      });
+      setUser(res.data); 
+    } catch (err) {
+      console.error('Login failed:', err);
+      throw err;
+    } finally {
       setLoading(false);
-    };
-    checkAuth();
-  }, []);
-
-  const login = () => {
-    setUser({ id: '123', name: 'Vaibhav' });
+    }
   };
 
   const logout = () => {

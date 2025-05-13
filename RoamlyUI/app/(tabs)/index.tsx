@@ -1,10 +1,11 @@
-// app/(tabs)/index.tsx
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView } from 'react-native';
+import { View, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { Text, Card, ActivityIndicator, useTheme } from 'react-native-paper';
 import * as Location from 'expo-location';
 import axios from 'axios';
 import { useAuth } from '@/hooks/useAuth';
+import { router } from 'expo-router';
+import placeholder from '../../assets/images/favicon.png';
 
 interface Property {
   landmarkName: string;
@@ -89,18 +90,15 @@ export default function ExploreScreen() {
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }}>
       {properties.map((item, index) => (
-        <Card key={index} style={{ marginBottom: 16 }}>
-          <Card.Title title={item.landmarkName} subtitle={`${item.city}, ${item.country}`} />
-          <Card.Content>
-            <Text>Latitude: {item.latitude}</Text>
-            <Text>Longitude: {item.longitude}</Text>
-            <Text>GeoHash: {item.geohash}</Text>
-            <Text>Responses:</Text>
-            {Object.entries(item.responses).map(([k, v]) => (
-              <Text key={k} style={{ marginLeft: 8 }}>• {k.split('_').pop()}: {v}</Text>
-            ))}
-          </Card.Content>
-        </Card>
+        <TouchableOpacity
+          key={index}
+          onPress={() => router.push({ pathname: '/details/[landmarkId]', params: { landmarkId: item.landmarkName }, query: { ...item } })}
+        >
+          <Card style={{ marginBottom: 16 }}>
+            <Card.Cover source={placeholder} />
+            <Card.Title title={item.landmarkName} />
+          </Card>
+        </TouchableOpacity>
       ))}
     </ScrollView>
   );

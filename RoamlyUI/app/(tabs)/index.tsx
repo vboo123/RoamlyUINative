@@ -95,15 +95,14 @@ export default function ExploreScreen() {
           onPress={() =>
             router.push({
               pathname: '/details/[landmarkId]',
-              params: {
-                landmarkId: item.landmarkName,
+              params: { landmarkId: item.landmarkName },
+              query: {
                 geohash: item.geohash,
                 city: item.city,
                 country: item.country,
-                responses: JSON.stringify(item.responses)
               }
             })
-          }
+          }            
                   >
           <Card style={{ marginBottom: 16 }}>
             <Card.Cover source={placeholder} />

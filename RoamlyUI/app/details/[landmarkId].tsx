@@ -1,21 +1,51 @@
+import { useEffect, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import { ScrollView, View } from 'react-native';
-import { Appbar, Card, Text } from 'react-native-paper';
+import { Appbar, Card, Text, ActivityIndicator } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '@/hooks/useAuth';
+import axios from 'axios';
 
 export default function LandmarkDetail() {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const params = useLocalSearchParams();
-  const { landmarkId, city, country, responses: rawResponses } = params;
+  const { landmarkId, geohash, city, country } = params;
+  console.log(landmarkId)
 
-  console.log(rawResponses)
+  const [loading, setLoading] = useState(true);
+  const [textResponse, setTextResponse] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  let parsedResponses: Record<string, string> = {};
-  try {
-    parsedResponses = JSON.parse(rawResponses as string);
-  } catch (e) {
-    console.error('Failed to parse responses:', e);
-  }
+  useEffect(() => {
+    const fetchResponse = async () => {
+      try {
+        const response = await axios.get('https://roamlyservice.onrender.com/landmark-response', {
+          params: {
+            landmark: landmarkId,
+            geohash,
+            userCountry: user.country,
+            interestOne: user.interestOne,
+            interestTwo: user.interestTwo,
+            interestThree: user.interestThree,
+          },
+        });
+
+        console.log(response.data.text)
+
+        setTextResponse(response.data.text);
+      } catch (err: any) {
+        console.error('❌ Error fetching landmark response:', err.response?.data || err.message);
+        setError('No matching response found for your preferences.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (landmarkId && geohash && user) {
+      fetchResponse();
+    }
+  }, [landmarkId, geohash, user]);
 
   return (
     <View style={{ flex: 1, paddingTop: insets.top }}>
@@ -25,16 +55,18 @@ export default function LandmarkDetail() {
       </Appbar.Header>
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Card>
-          <Card.Content>
-            <Text variant="titleMedium" style={{ marginBottom: 8 }}>Narratives:</Text>
-            {Object.entries(parsedResponses).map(([key, value]) => (
-              <Text key={key} style={{ marginBottom: 8 }}>
-                • {key.split('_').pop()}: {value}
-              </Text>
-            ))}
-          </Card.Content>
-        </Card>
+        {loading ? (
+          <ActivityIndicator animating size="large" />
+        ) : error ? (
+          <Text style={{ color: 'red' }}>{error}</Text>
+        ) : (
+          <Card>
+            <Card.Content>
+              <Text variant="titleMedium" style={{ marginBottom: 8 }}>Narrative:</Text>
+              <Text>{textResponse}</Text>
+            </Card.Content>
+          </Card>
+        )}
       </ScrollView>
     </View>
   );

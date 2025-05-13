@@ -75,6 +75,16 @@ export default function SignIn() {
       >
         {loading ? 'Signing In...' : 'Sign In'}
       </Button>
+      
+
+      <Button
+        mode="text"
+        onPress={() => router.push('/register')}
+        style={{ marginTop: 16 }}
+      >
+        Don't have an account? Register
+      </Button>
+
 
       {loading && <ActivityIndicator animating={true} style={{ marginTop: 20 }} />}
     </View>

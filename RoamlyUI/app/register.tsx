@@ -1,0 +1,198 @@
+import React, { useState } from 'react';
+import { ScrollView, View } from 'react-native';
+import {
+  Text,
+  TextInput,
+  Button,
+  Chip,
+  ActivityIndicator,
+  useTheme,
+} from 'react-native-paper';
+import PaperDropdown from '@/components/PaperDropdown';
+import axios from 'axios';
+import { useAuth } from '@/hooks/useAuth';
+import { router } from 'expo-router';
+
+const countries = [
+  { label: 'United States', value: 'United States' },
+  { label: 'India', value: 'India' },
+  { label: 'Canada', value: 'Canada' },
+  // add more as needed
+];
+
+const languages = [
+  { label: 'English', value: 'English' },
+  { label: 'Spanish', value: 'Spanish' },
+  { label: 'Hindi', value: 'Hindi' },
+  // add more as needed
+];
+
+const interests = [
+  'Nature',
+  'History',
+  'Food',
+  'Museums',
+  'Adventure',
+  'Beaches',
+  'Architecture',
+];
+
+export default function Register() {
+  const theme = useTheme();
+  const { setUser } = useAuth();
+
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    age: '',
+    country: '',
+    language: '',
+  });
+
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [emailError, setEmailError] = useState('');
+  const [formError, setFormError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (key: string, value: string) => {
+    setForm({ ...form, [key]: value });
+    if (key === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      setEmailError(emailRegex.test(value) ? '' : 'Please enter a valid email');
+    }
+  };
+
+  const toggleInterest = (interest: string) => {
+    if (selectedInterests.includes(interest)) {
+      setSelectedInterests(selectedInterests.filter((i) => i !== interest));
+    } else if (selectedInterests.length < 3) {
+      setSelectedInterests([...selectedInterests, interest]);
+    }
+  };
+
+  const handleRegister = async () => {
+    setFormError('');
+
+    if (!form.name || !form.email || !form.country || !form.language || !form.age) {
+      setFormError('Please fill out all fields');
+      return;
+    }
+
+    if (emailError) {
+      setFormError('Fix the email field before proceeding');
+      return;
+    }
+
+    if (selectedInterests.length !== 3) {
+      setFormError('Please select exactly 3 interests');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const payload = {
+        name: form.name,
+        email: form.email,
+        country: form.country,
+        language: form.language,
+        age: parseInt(form.age),
+        interestOne: selectedInterests[0],
+        interestTwo: selectedInterests[1],
+        interestThree: selectedInterests[2],
+      };
+
+      const res = await axios.post('https://roamlyservice.onrender.com/register-user/', payload);
+
+      const userWithId = { ...payload, user_id: res.data.user_id };
+      setUser(userWithId);
+      router.replace('/');
+    } catch (err) {
+      console.error(err);
+      setFormError('Registration failed. Try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
+      <Text variant="headlineMedium" style={{ textAlign: 'center', marginBottom: 20 }}>
+        Create a Roamly Account
+      </Text>
+
+      <TextInput
+        label="Name"
+        value={form.name}
+        onChangeText={(val) => handleChange('name', val)}
+        mode="outlined"
+        style={{ marginBottom: 12 }}
+      />
+
+      <TextInput
+        label="Email"
+        value={form.email}
+        onChangeText={(val) => handleChange('email', val)}
+        mode="outlined"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        error={!!emailError}
+        style={{ marginBottom: 4 }}
+      />
+      {emailError ? (
+        <Text style={{ color: theme.colors.error, marginBottom: 12 }}>{emailError}</Text>
+      ) : null}
+
+      <TextInput
+        label="Age"
+        value={form.age}
+        onChangeText={(val) => handleChange('age', val)}
+        keyboardType="numeric"
+        mode="outlined"
+        style={{ marginBottom: 12 }}
+      />
+      <PaperDropdown
+        label="Country"
+        value={form.country}
+        onChange={(val) => handleChange('country', val)}
+        options={countries}
+        />
+      <PaperDropdown
+        label="Language"
+        value={form.language}
+        onChange={(val) => handleChange('language', val)}
+        options={languages}
+        />
+
+      <Text style={{ marginTop: 16, marginBottom: 4 }}>Select 3 Interests</Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+        {interests.map((interest) => (
+          <Chip
+            key={interest}
+            mode="outlined"
+            selected={selectedInterests.includes(interest)}
+            onPress={() => toggleInterest(interest)}
+            style={{ margin: 4 }}
+          >
+            {interest}
+          </Chip>
+        ))}
+      </View>
+
+      {formError ? (
+        <Text style={{ color: theme.colors.error, marginBottom: 12 }}>{formError}</Text>
+      ) : null}
+
+      <Button
+        mode="contained"
+        onPress={handleRegister}
+        disabled={loading}
+        loading={loading}
+      >
+        {loading ? 'Registering...' : 'Register'}
+      </Button>
+
+      {loading && <ActivityIndicator animating={true} style={{ marginTop: 20 }} />}
+    </ScrollView>
+  );
+}

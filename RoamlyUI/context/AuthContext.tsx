@@ -3,10 +3,17 @@ import { createContext, useContext, useState } from 'react';
 import axios from 'axios';
 
 interface User {
-  id: string;
   name: string;
   email: string;
+  user_id: string;
+  country: string;
+  interestOne: string;
+  interestTwo: string;
+  interestThree: string;
+  language: string;
+  age: number;
 }
+
 
 interface AuthContextType {
   user: User | null;

@@ -92,8 +92,19 @@ export default function ExploreScreen() {
       {properties.map((item, index) => (
         <TouchableOpacity
           key={index}
-          onPress={() => router.push({ pathname: '/details/[landmarkId]', params: { landmarkId: item.landmarkName }, query: { ...item } })}
-        >
+          onPress={() =>
+            router.push({
+              pathname: '/details/[landmarkId]',
+              params: {
+                landmarkId: item.landmarkName,
+                geohash: item.geohash,
+                city: item.city,
+                country: item.country,
+                responses: JSON.stringify(item.responses)
+              }
+            })
+          }
+                  >
           <Card style={{ marginBottom: 16 }}>
             <Card.Cover source={placeholder} />
             <Card.Title title={item.landmarkName} />

@@ -1,9 +1,9 @@
-// app/(tabs)/_layout.tsx
+// app/(app)/_layout.tsx
 import { useAuth } from '@/hooks/useAuth';
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 
-export default function TabsLayout() {
+export default function AppLayout() {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -18,10 +18,5 @@ export default function TabsLayout() {
     return <Redirect href="/sign-in" />;
   }
 
-  return (
-    <Tabs>
-      <Tabs.Screen name="index" options={{ title: 'Home' }} />
-      <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
-    </Tabs>
-  );
+  return <Stack />;
 }

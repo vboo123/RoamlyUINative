@@ -1,10 +1,11 @@
 // app/(tabs)/_layout.tsx
 import { useAuth } from '@/hooks/useAuth';
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Tabs, router } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
+import { IconButton } from 'react-native-paper';
 
 export default function TabsLayout() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
 
   if (loading) {
     return (
@@ -20,7 +21,22 @@ export default function TabsLayout() {
 
   return (
     <Tabs>
-      <Tabs.Screen name="index" options={{ title: 'Home' }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Explore',
+          headerRight: () => (
+            <IconButton
+              icon="logout"
+              onPress={async () => {
+                await logout();
+                router.replace('/sign-in');
+              }}
+              accessibilityLabel="Log out"
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

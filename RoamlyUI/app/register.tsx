@@ -17,6 +17,7 @@ const countries = [
   { label: 'United States', value: 'United States' },
   { label: 'India', value: 'India' },
   { label: 'Canada', value: 'Canada' },
+  {label: 'Mexico', value: 'Mexico'}
   // add more as needed
 ];
 

@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { View, ScrollView, Image, TouchableOpacity } from 'react-native';
-import { Text, Card, ActivityIndicator, useTheme } from 'react-native-paper';
-import * as Location from 'expo-location';
-import axios from 'axios';
 import { useAuth } from '@/hooks/useAuth';
+import axios from 'axios';
+import * as Location from 'expo-location';
 import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Card, Text, useTheme } from 'react-native-paper';
 import placeholder from '../../assets/images/favicon.png';
 
 interface Property {
@@ -31,9 +31,7 @@ export default function ExploreScreen() {
         !user.age ||
         !user.country ||
         !user.language ||
-        !user.interestOne ||
-        !user.interestTwo ||
-        !user.interestThree
+        !user.interestOne
       ) {
         setError('Missing user preferences. Please update your profile.');
         setLoading(false);
@@ -55,8 +53,6 @@ export default function ExploreScreen() {
             lat: latitude,
             long: longitude,
             interestOne: user.interestOne,
-            interestTwo: user.interestTwo,
-            interestThree: user.interestThree,
             userAge: user.age,
             userCountry: user.country,
             userLanguage: user.language,

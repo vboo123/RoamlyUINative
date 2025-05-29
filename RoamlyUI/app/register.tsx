@@ -1,31 +1,29 @@
+import PaperDropdown from '@/components/PaperDropdown';
+import { useAuth } from '@/hooks/useAuth';
+import axios from 'axios';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import {
-  Text,
-  TextInput,
+  ActivityIndicator,
   Button,
   Chip,
-  ActivityIndicator,
+  Text,
+  TextInput,
   useTheme,
 } from 'react-native-paper';
-import PaperDropdown from '@/components/PaperDropdown';
-import axios from 'axios';
-import { useAuth } from '@/hooks/useAuth';
-import { router } from 'expo-router';
 
 const countries = [
   { label: 'United States', value: 'United States' },
   { label: 'India', value: 'India' },
   { label: 'Canada', value: 'Canada' },
-  {label: 'Mexico', value: 'Mexico'}
-  // add more as needed
+  { label: 'Mexico', value: 'Mexico' },
 ];
 
 const languages = [
   { label: 'English', value: 'English' },
   { label: 'Spanish', value: 'Spanish' },
   { label: 'Hindi', value: 'Hindi' },
-  // add more as needed
 ];
 
 const interests = [
@@ -53,7 +51,7 @@ export default function Register() {
     language: '',
   });
 
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [selectedInterest, setSelectedInterest] = useState('');
   const [emailError, setEmailError] = useState('');
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -67,11 +65,7 @@ export default function Register() {
   };
 
   const toggleInterest = (interest: string) => {
-    if (selectedInterests.includes(interest)) {
-      setSelectedInterests(selectedInterests.filter((i) => i !== interest));
-    } else if (selectedInterests.length < 3) {
-      setSelectedInterests([...selectedInterests, interest]);
-    }
+    setSelectedInterest((prev) => (prev === interest ? '' : interest));
   };
 
   const handleRegister = async () => {
@@ -87,8 +81,8 @@ export default function Register() {
       return;
     }
 
-    if (selectedInterests.length !== 3) {
-      setFormError('Please select exactly 3 interests');
+    if (!selectedInterest) {
+      setFormError('Please select one interest');
       return;
     }
 
@@ -101,10 +95,10 @@ export default function Register() {
         country: form.country,
         language: form.language,
         age: form.age,
-        interestOne: selectedInterests[0],
-        interestTwo: selectedInterests[1],
-        interestThree: selectedInterests[2],
+        interestOne: selectedInterest,
       };
+
+      console.log(payload);
 
       const res = await axios.post('https://roamlyservice.onrender.com/register-user/', payload);
 
@@ -155,26 +149,27 @@ export default function Register() {
         mode="outlined"
         style={{ marginBottom: 12 }}
       />
+
       <PaperDropdown
         label="Country"
         value={form.country}
         onChange={(val) => handleChange('country', val)}
         options={countries}
-        />
+      />
       <PaperDropdown
         label="Language"
         value={form.language}
         onChange={(val) => handleChange('language', val)}
         options={languages}
-        />
+      />
 
-      <Text style={{ marginTop: 16, marginBottom: 4 }}>Select 3 Interests</Text>
+      <Text style={{ marginTop: 16, marginBottom: 4 }}>Select 1 Interest</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
         {interests.map((interest) => (
           <Chip
             key={interest}
             mode="outlined"
-            selected={selectedInterests.includes(interest)}
+            selected={selectedInterest === interest}
             onPress={() => toggleInterest(interest)}
             style={{ margin: 4 }}
           >
@@ -206,11 +201,9 @@ export default function Register() {
             Log in
           </Text>
         </Text>
-    </View>
-
+      </View>
 
       {loading && <ActivityIndicator animating={true} style={{ marginTop: 20 }} />}
     </ScrollView>
-    
   );
 }

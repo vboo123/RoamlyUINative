@@ -1,6 +1,6 @@
 // context/AuthContext.tsx
-import { createContext, useContext, useState } from 'react';
 import axios from 'axios';
+import { createContext, useContext, useState } from 'react';
 
 interface User {
   name: string;
@@ -8,8 +8,6 @@ interface User {
   user_id: string;
   country: string;
   interestOne: string;
-  interestTwo: string;
-  interestThree: string;
   language: string;
   age: number;
 }

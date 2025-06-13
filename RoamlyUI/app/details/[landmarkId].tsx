@@ -7,7 +7,7 @@ import {
   ImageBackground,
   ScrollView,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import {
   ActivityIndicator,
@@ -22,7 +22,15 @@ export default function LandmarkDetail() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const params = useLocalSearchParams();
-  const { landmarkId, geohash, city, country } = params;
+
+  const [landmarkMeta, setLandmarkMeta] = useState({
+    landmarkId: params.landmarkId,
+    geohash: params.geohash,
+    city: params.city,
+    country: params.country,
+  });
+
+  const { landmarkId, geohash, city, country } = landmarkMeta;
 
   const [loading, setLoading] = useState(true);
   const [textResponse, setTextResponse] = useState<string | null>(null);
@@ -120,7 +128,7 @@ export default function LandmarkDetail() {
     }
   };
 
-  const landmarkImage = `https://source.unsplash.com/600x300/?church,architecture`; // placeholder
+  const landmarkImage = `https://source.unsplash.com/600x300/?church,architecture`;
 
   return (
     <View style={{ flex: 1, paddingTop: insets.top }}>

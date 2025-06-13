@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Audio } from 'expo-av';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { ActivityIndicator, Appbar, Card, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -19,26 +19,48 @@ export default function LandmarkDetail() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
 
-  useEffect(() => {
-    const fetchResponse = async () => {
-      try {
-        const response = await axios.get('https://roamlyservice.onrender.com/landmark-response', {
-          params: {
-            landmark: landmarkId,
-            userCountry: user?.country || "default",
-            interestOne: user?.interestOne || "",
-          },
-        });
+  const semanticFollowups = [
+    { label: 'Learn more about architecture', key: 'architecture.style' },
+    { label: 'Learn about the vibe', key: 'experience.vibe' },
+    { label: 'Myths and legends', key: 'myths.legends' },
+    { label: 'Crowds and access', key: 'access.crowds' },
+  ];
 
-        setTextResponse(response.data.assembled_text);
-      } catch (err: any) {
-        console.error('❌ Error fetching landmark response:', err.response?.data || err.message);
-        setError('No matching response found for your preferences.');
-      } finally {
-        setLoading(false);
+  const fetchResponse = async (semanticKey: string = 'origin.general') => {
+    try {
+      const response = await axios.get('https://roamlyservice.onrender.com/landmark-response', {
+        params: {
+          landmark: landmarkId,
+          userCountry: user?.country || 'default',
+          interestOne: user?.interestOne || '',
+          semanticKey,
+        },
+      });
+  
+      const jsonUrl = response.data?.json_url;
+      if (!jsonUrl) {
+        throw new Error('No semantic JSON URL provided by backend.');
       }
-    };
+  
+      const jsonRes = await axios.get(jsonUrl);
+      const semanticText = jsonRes.data?.response;
+  
+      if (!semanticText) {
+        throw new Error('No "response" field found in the JSON.');
+      }
+  
+      setTextResponse(semanticText);
+      setError(null);
+    } catch (err: any) {
+      console.error('❌ Error fetching landmark response:', err.message);
+      setError('No matching response found for your preferences.');
+      setTextResponse(null);
+    } finally {
+      setLoading(false);
+    }
+  };  
 
+  useEffect(() => {
     if (landmarkId && geohash && user) {
       fetchResponse();
     }
@@ -56,20 +78,20 @@ export default function LandmarkDetail() {
     if (!landmarkId || !user) return;
 
     const semanticKeys = [
-      "origin.general",
-      "origin.name",
-      "culture.symbolism",
-      "myths.legends",
-      "architecture.style",
-      "experience.vibe",
-      "access.crowds",
-      "access.hours",
+      'origin.general',
+      'origin.name',
+      'culture.symbolism',
+      'myths.legends',
+      'architecture.style',
+      'experience.vibe',
+      'access.crowds',
+      'access.hours',
     ];
 
     setIsPlaying(true);
     try {
       for (const key of semanticKeys) {
-        const audioUrl = `https://your-audio-cdn.com/audio/${landmarkId}/${key}#${user.country || "default"}.mp3`;
+        const audioUrl = `https://your-audio-cdn.com/audio/${landmarkId}/${key}#${user.country || 'default'}.mp3`;
         const { sound: newSound } = await Audio.Sound.createAsync({ uri: audioUrl });
         setSound(newSound);
         await newSound.playAsync();
@@ -81,7 +103,7 @@ export default function LandmarkDetail() {
         await newSound.unloadAsync();
       }
     } catch (error) {
-      console.error("🔈 Audio playback error:", error);
+      console.error('🔈 Audio playback error:', error);
     } finally {
       setIsPlaying(false);
     }
@@ -101,12 +123,34 @@ export default function LandmarkDetail() {
         ) : error ? (
           <Text style={{ color: 'red' }}>{error}</Text>
         ) : (
-          <Card>
-            <Card.Content>
-              <Text variant="titleMedium" style={{ marginBottom: 8 }}>Narrative:</Text>
-              <Text>{textResponse}</Text>
-            </Card.Content>
-          </Card>
+          <>
+            <Card>
+              <Card.Content>
+                <Text variant="titleMedium" style={{ marginBottom: 8 }}>
+                  Narrative:
+                </Text>
+                <Text>{textResponse}</Text>
+              </Card.Content>
+            </Card>
+
+            <View style={{ marginTop: 20 }}>
+              <Text variant="titleMedium" style={{ marginBottom: 10 }}>
+                Follow-up Questions:
+              </Text>
+              {semanticFollowups.map((item) => (
+                <TouchableOpacity
+                  key={item.key}
+                  onPress={() => {
+                    setLoading(true);
+                    fetchResponse(item.key);
+                  }}
+                  style={{ paddingVertical: 12 }}
+                >
+                  <Text style={{ color: '#1e88e5' }}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
         )}
       </ScrollView>
     </View>

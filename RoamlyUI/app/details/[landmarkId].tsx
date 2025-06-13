@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import axios from 'axios';
-import { Audio } from 'expo-av';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as Speech from 'expo-speech';
 import { useEffect, useState } from 'react';
 import {
   ImageBackground,
@@ -36,7 +36,6 @@ export default function LandmarkDetail() {
   const [textResponse, setTextResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
 
   const semanticFollowups = [
     { label: 'Learn more about architecture', key: 'architecture.style' },
@@ -85,47 +84,20 @@ export default function LandmarkDetail() {
     }
   }, [landmarkId, geohash, user]);
 
-  useEffect(() => {
-    return sound
-      ? () => {
-          sound.unloadAsync();
-        }
-      : undefined;
-  }, [sound]);
-
-  const playAudioNarration = async () => {
-    if (!landmarkId || !user) return;
-
-    const semanticKeys = [
-      'origin.general',
-      'origin.name',
-      'culture.symbolism',
-      'myths.legends',
-      'architecture.style',
-      'experience.vibe',
-      'access.crowds',
-      'access.hours',
-    ];
+  const playAudioNarration = () => {
+    if (!textResponse) return;
 
     setIsPlaying(true);
-    try {
-      for (const key of semanticKeys) {
-        const audioUrl = `https://your-audio-cdn.com/audio/${landmarkId}/${key}#${user.country || 'default'}.mp3`;
-        const { sound: newSound } = await Audio.Sound.createAsync({ uri: audioUrl });
-        setSound(newSound);
-        await newSound.playAsync();
-        await new Promise((resolve) =>
-          newSound.setOnPlaybackStatusUpdate((status) => {
-            if (status.isLoaded && status.didJustFinish) resolve(true);
-          })
-        );
-        await newSound.unloadAsync();
-      }
-    } catch (error) {
-      console.error('🔈 Audio playback error:', error);
-    } finally {
-      setIsPlaying(false);
-    }
+    Speech.speak(textResponse, {
+      onDone: () => setIsPlaying(false),
+      onStopped: () => setIsPlaying(false),
+      onError: () => setIsPlaying(false),
+    });
+  };
+
+  const stopAudioNarration = () => {
+    Speech.stop();
+    setIsPlaying(false);
   };
 
   const landmarkImage = `https://source.unsplash.com/600x300/?church,architecture`;
@@ -176,6 +148,17 @@ export default function LandmarkDetail() {
                 >
                   {isPlaying ? 'Playing...' : 'Listen to this'}
                 </Button>
+
+                {isPlaying && (
+                  <Button
+                    icon="stop"
+                    mode="outlined"
+                    onPress={stopAudioNarration}
+                    style={{ marginTop: 8, alignSelf: 'flex-start' }}
+                  >
+                    Stop
+                  </Button>
+                )}
               </Card.Content>
             </Card>
 

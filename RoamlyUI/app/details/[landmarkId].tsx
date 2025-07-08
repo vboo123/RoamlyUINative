@@ -46,11 +46,11 @@ export default function LandmarkDetail() {
 
   const fetchResponse = async (semanticKey: string = 'origin.general') => {
     try {
-      const response = await axios.get('http://192.168.1.78:8000/landmark-response', {
+      const response = await axios.get('http://192.168.1.102/landmark-response', {
         params: {
           landmark: landmarkId,
           userCountry: user?.country || 'default',
-          interestOne: user?.interestOne || '',
+          interestOne: user?.interestOne || '', 
           semanticKey,
         },
       });

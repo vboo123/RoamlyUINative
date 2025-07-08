@@ -1,8 +1,9 @@
+import VoiceQueryButton from '@/components/VoiceQueryButton';
 import { useAuth } from '@/hooks/useAuth';
 import axios from 'axios';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Speech from 'expo-speech';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ImageBackground,
   ScrollView,
@@ -36,6 +37,7 @@ export default function LandmarkDetail() {
   const [textResponse, setTextResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isProcessingVoiceQuery, setIsProcessingVoiceQuery] = useState(false);
 
   const semanticFollowups = [
     { label: 'Learn more about architecture', key: 'architecture.style' },
@@ -100,6 +102,65 @@ export default function LandmarkDetail() {
     setIsPlaying(false);
   };
 
+  const handleVoiceQuery = async (result: { query: string; audioUri?: string }) => {
+    console.log('🎤 Voice query result:', result);
+    
+    if (result.audioUri) {
+      setIsProcessingVoiceQuery(true);
+      
+      try {
+        console.log('🎤 Sending audio query to /ask-landmark route');
+        
+        // Create form data for audio file upload
+        const formData = new FormData();
+        formData.append('audio_file', {
+          uri: result.audioUri,
+          type: 'audio/m4a', // Adjust based on your recording format
+          name: 'voice_query.m4a'
+        } as any);
+        
+        // Add landmark context
+        formData.append('landmark_id', landmarkId?.toString() || '');
+        formData.append('geohash', geohash?.toString() || '');
+        formData.append('city', city?.toString() || '');
+        formData.append('country', country?.toString() || '');
+        
+        // Add user context if available
+        if (user) {
+          formData.append('user_age', user.age?.toString() || '');
+          formData.append('user_country', user.country || '');
+          formData.append('user_language', user.language || '');
+          formData.append('user_interest', user.interestOne || '');
+        }
+
+        const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        console.log('✅ Audio query response:', response.data);
+        
+        // Update the narrative with the response
+        if (response.data.response) {
+          setTextResponse(response.data.response);
+          setError(null);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error sending audio query:', error);
+        setError('Failed to process audio query. Please try again.');
+      } finally {
+        setIsProcessingVoiceQuery(false);
+      }
+    } else {
+      // Handle text-only query
+      console.log('📝 Text query:', result.query);
+      // You can add logic here to handle text queries
+      // For example, search for specific information or update the narrative
+    }
+  };
+
   const landmarkImage = `https://source.unsplash.com/600x300/?church,architecture`;
 
   return (
@@ -130,6 +191,11 @@ export default function LandmarkDetail() {
 
         {loading ? (
           <ActivityIndicator animating size="large" style={{ marginTop: 20 }} />
+        ) : isProcessingVoiceQuery ? (
+          <View style={{ marginTop: 20, alignItems: 'center' }}>
+            <ActivityIndicator animating size="large" />
+            <Text style={{ marginTop: 10, color: '#666' }}>Processing your voice query...</Text>
+          </View>
         ) : error ? (
           <Text style={{ color: 'red', marginTop: 20 }}>{error}</Text>
         ) : (
@@ -188,6 +254,10 @@ export default function LandmarkDetail() {
           </>
         )}
       </ScrollView>
+      
+      <VoiceQueryButton 
+        onQueryResult={handleVoiceQuery}
+      />
     </View>
   );
 }

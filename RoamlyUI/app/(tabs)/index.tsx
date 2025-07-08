@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, TouchableOpacity } from 'react-native';
 import { ActivityIndicator, Card, Text, useTheme } from 'react-native-paper';
-import placeholder from '../../assets/images/favicon.png';
+// import placeholder from '../../assets/images/favicon.png';
 
 interface Property {
   landmarkName: string;
@@ -100,7 +100,7 @@ export default function ExploreScreen() {
             }            
                     >
             <Card style={{ marginBottom: 16 }}>
-              <Card.Cover source={placeholder} />
+              <Card.Cover source={{ uri: 'https://source.unsplash.com/600x300/?landmark,architecture' }} />
               <Card.Title title={item.landmarkName} />
             </Card>
           </TouchableOpacity>
@@ -108,8 +108,8 @@ export default function ExploreScreen() {
       </ScrollView>
       
       <VoiceQueryButton 
-        onQueryResult={(query) => {
-          console.log('🎤 Voice query result:', query);
+        onQueryResult={(result) => {
+          console.log('🎤 Voice query result:', result);
           // You can add logic here to handle the voice query
           // For example, search for landmarks or navigate to results
         }}

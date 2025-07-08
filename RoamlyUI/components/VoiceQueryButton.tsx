@@ -5,7 +5,7 @@ import { Alert, StyleSheet, View } from 'react-native';
 import { Button, FAB, IconButton, Modal, Portal, Text, TextInput } from 'react-native-paper';
 
 interface VoiceQueryButtonProps {
-  onQueryResult?: (result: string) => void;
+  onQueryResult?: (result: { query: string; audioUri?: string }) => void;
 }
 
 export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProps) {
@@ -17,6 +17,7 @@ export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProp
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [hasPermission, setHasPermission] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [audioUri, setAudioUri] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -123,6 +124,9 @@ export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProp
         console.log('📊 Audio levels:', status.metering);
         console.log('🎵 Audio format:', status.isRecording ? 'Recording' : 'Stopped');
         
+        // Store the audio URI for later use
+        setAudioUri(uri);
+        
         // Show detailed recording info to user
         const durationSeconds = Math.round(status.durationMillis / 1000);
         const audioLevel = status.metering || 'Unknown';
@@ -132,7 +136,7 @@ export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProp
         // Try to convert speech to text using Web Speech API
         try {
           // Note: This will only work in web environment or with proper setup
-          // For now, let's simulate the speech-to-text process
+          // For now, let's simulate the speech recognition result
           setTimeout(() => {
             // Simulate speech recognition result
             const simulatedTranscript = "Tell me about this building";
@@ -187,15 +191,18 @@ export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProp
 
       console.log('Processing query:', extractedQuery);
 
-      // Here you would typically send this to your backend for processing
-      // For now, we'll just show the extracted query
+      // Pass the query and audio URI to the parent component
       if (onQueryResult) {
-        onQueryResult(extractedQuery);
+        onQueryResult({
+          query: extractedQuery,
+          audioUri: audioUri || undefined
+        });
       }
 
       // Close modal and reset
       setIsModalVisible(false);
       setQueryText('');
+      setAudioUri(null);
       
     } catch (error) {
       console.error('Error processing query:', error);

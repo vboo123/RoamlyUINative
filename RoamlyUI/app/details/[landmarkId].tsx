@@ -48,7 +48,9 @@ export default function LandmarkDetail() {
 
   const fetchResponse = async (semanticKey: string = 'origin.general') => {
     try {
-      const response = await axios.get('http://192.168.1.102/landmark-response', {
+      console.log('🎤 Fetching landmark response for:', landmarkId);  
+      console.log("semanticKey", semanticKey);
+      const response = await axios.get('http://192.168.1.102:8000/landmark-response', {
         params: {
           landmark: landmarkId,
           userCountry: user?.country || 'default',
@@ -57,13 +59,7 @@ export default function LandmarkDetail() {
         },
       });
 
-      const jsonUrl = response.data?.json_url;
-      if (!jsonUrl) {
-        throw new Error('No semantic JSON URL provided by backend.');
-      }
-
-      const jsonRes = await axios.get(jsonUrl);
-      const semanticText = jsonRes.data?.response;
+      const semanticText = response.data?.response;
 
       if (!semanticText) {
         throw new Error('No "response" field found in the JSON.');

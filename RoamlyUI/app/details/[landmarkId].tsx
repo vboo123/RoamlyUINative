@@ -100,34 +100,46 @@ export default function LandmarkDetail() {
 
   const handleVoiceQuery = async (result: { query: string; audioUri?: string }) => {
     console.log('🎤 Voice query result:', result);
+    console.log('🎤 Audio URI present:', !!result.audioUri);
+    console.log('🎤 Audio URI value:', result.audioUri);
     
     if (result.audioUri) {
       setIsProcessingVoiceQuery(true);
       
       try {
         console.log('🎤 Sending audio query to /ask-landmark route');
+        console.log('🎤 Landmark ID:', landmarkId);
+        console.log('🎤 Geohash:', geohash);
+        console.log('🎤 City:', city);
+        console.log('🎤 Country:', country);
         
         // Create form data for audio file upload
         const formData = new FormData();
-        formData.append('audio_file', {
+        
+        // Log the audio file object being created
+        const audioFile = {
           uri: result.audioUri,
           type: 'audio/m4a', // Adjust based on your recording format
           name: 'voice_query.m4a'
-        } as any);
+        };
+        console.log('🎤 Audio file object:', audioFile);
         
-        // Add landmark context
-        formData.append('landmark_id', landmarkId?.toString() || '');
-        formData.append('geohash', geohash?.toString() || '');
-        formData.append('city', city?.toString() || '');
-        formData.append('country', country?.toString() || '');
+        formData.append('audio_file', audioFile as any);
         
-        // Add user context if available
+        // Add landmark context - match backend parameter names
+        formData.append('landmark', landmarkId?.toString() || '');
+        
+        // Add user context if available - match backend parameter names
         if (user) {
-          formData.append('user_age', user.age?.toString() || '');
-          formData.append('user_country', user.country || '');
-          formData.append('user_language', user.language || '');
-          formData.append('user_interest', user.interestOne || '');
+          formData.append('userCountry', user.country || 'default');
+          formData.append('interestOne', user.interestOne || '');
+        } else {
+          formData.append('userCountry', 'default');
+          formData.append('interestOne', '');
         }
+
+        console.log('🎤 FormData created, sending to backend...');
+        console.log('🎤 Backend URL: http://192.168.1.102:8000/ask-landmark');
 
         const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
           headers: {
@@ -143,8 +155,12 @@ export default function LandmarkDetail() {
           setError(null);
         }
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Error sending audio query:', error);
+        if (error.response) {
+          console.error('❌ Error response data:', error.response.data);
+          console.error('❌ Error response status:', error.response.status);
+        }
         setError('Failed to process audio query. Please try again.');
       } finally {
         setIsProcessingVoiceQuery(false);
@@ -152,6 +168,7 @@ export default function LandmarkDetail() {
     } else {
       // Handle text-only query
       console.log('📝 Text query:', result.query);
+      console.log('📝 No audio URI provided');
       // You can add logic here to handle text queries
       // For example, search for specific information or update the narrative
     }

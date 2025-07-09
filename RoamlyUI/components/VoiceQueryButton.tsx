@@ -2,7 +2,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Audio } from 'expo-av';
 import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import { Button, FAB, IconButton, Modal, Portal, Text, TextInput } from 'react-native-paper';
+import { Button, FAB, IconButton, Modal, Portal, Text } from 'react-native-paper';
 
 interface VoiceQueryButtonProps {
   onQueryResult?: (result: { query: string; audioUri?: string }) => void;
@@ -18,6 +18,8 @@ export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProp
   const [hasPermission, setHasPermission] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [audioUri, setAudioUri] = useState<string | null>(null);
+  const [currentAudioUri, setCurrentAudioUri] = useState<string | null>(null);
+  const [isReadyToSubmit, setIsReadyToSubmit] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -126,27 +128,20 @@ export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProp
         
         // Store the audio URI for later use
         setAudioUri(uri);
+        setCurrentAudioUri(uri); // Store in local variable for immediate use
         
         // Show detailed recording info to user
         const durationSeconds = Math.round(status.durationMillis / 1000);
         const audioLevel = status.metering || 'Unknown';
         
-        setQueryText(`🎤 Recording captured!\n\n📊 Details:\n• Duration: ${durationSeconds} seconds\n• Audio level: ${audioLevel}\n• File saved successfully\n\nConverting speech to text...`);
+        setQueryText(`🎤 Recording captured!\n\n📊 Details:\n• Duration: ${durationSeconds} seconds\n• Audio level: ${audioLevel}\n• File saved successfully\n\nReady to submit your question!`);
         
-        // Try to convert speech to text using Web Speech API
-        try {
-          // Note: This will only work in web environment or with proper setup
-          // For now, let's simulate the speech recognition result
-          setTimeout(() => {
-            // Simulate speech recognition result
-            const simulatedTranscript = "Tell me about this building";
-            console.log('🗣️ Speech-to-text result:', simulatedTranscript);
-            setQueryText(simulatedTranscript);
-          }, 2000);
-        } catch (error) {
-          console.log('Speech-to-text not available, using placeholder');
-          setQueryText('Tell me about this landmark');
-        }
+        // Mark as ready to submit immediately
+        setIsReadyToSubmit(true);
+        console.log('✅ Recording complete - ready to submit!');
+        
+        // Note: Removed the setTimeout that was overriding the state
+        // The submit button should now appear immediately after recording
       }
     } catch (err) {
       console.error('Failed to stop recording', err);
@@ -155,7 +150,7 @@ export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProp
   };
 
   const processQuery = async () => {
-    if (!queryText.trim()) {
+    if (!queryText.trim() || !isReadyToSubmit) {
       return;
     }
 
@@ -190,12 +185,13 @@ export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProp
       }
 
       console.log('Processing query:', extractedQuery);
+      console.log('Audio URI at processing time:', currentAudioUri);
 
       // Pass the query and audio URI to the parent component
       if (onQueryResult) {
         onQueryResult({
           query: extractedQuery,
-          audioUri: audioUri || undefined
+          audioUri: currentAudioUri || undefined
         });
       }
 
@@ -203,6 +199,8 @@ export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProp
       setIsModalVisible(false);
       setQueryText('');
       setAudioUri(null);
+      setCurrentAudioUri(null);
+      setIsReadyToSubmit(false);
       
     } catch (error) {
       console.error('Error processing query:', error);
@@ -219,13 +217,38 @@ export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProp
     setIsModalVisible(false);
     setQueryText('');
     setIsProcessing(false);
+    setIsReadyToSubmit(false);
   };
 
   const handleSubmit = () => {
-    if (queryText.trim()) {
+    if (queryText.trim() && isReadyToSubmit) {
       processQuery();
     }
   };
+
+  // Check if ready to submit when query text changes
+  useEffect(() => {
+    console.log('🔍 isReadyToSubmit check:', { queryText: queryText.trim(), isRecording, isReadyToSubmit });
+    if (queryText.trim() && !isRecording) {
+      setIsReadyToSubmit(true);
+      console.log('✅ Setting isReadyToSubmit to true');
+    } else if (!queryText.trim()) {
+      setIsReadyToSubmit(false);
+      console.log('❌ Setting isReadyToSubmit to false');
+    }
+  }, [queryText, isRecording]);
+
+  // Debug log for button state
+  useEffect(() => {
+    console.log('🔍 Button state:', {
+      queryText: queryText.trim(),
+      isProcessing,
+      isRecording,
+      isReadyToSubmit,
+      buttonDisabled: !queryText.trim() || isProcessing || isRecording || !isReadyToSubmit,
+      buttonText: isProcessing ? 'Processing...' : isReadyToSubmit ? 'Submit Question' : 'Not Ready'
+    });
+  }, [queryText, isProcessing, isRecording, isReadyToSubmit]);
 
   return (
     <>
@@ -248,7 +271,7 @@ export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProp
             </Text>
             
             <Text variant="bodyMedium" style={styles.instructionText}>
-              Tap the mic to record your question, or type it below.
+              Tap the mic to record your question, then submit when ready.
             </Text>
 
             {/* Voice Recording Section */}
@@ -266,44 +289,26 @@ export default function VoiceQueryButton({ onQueryResult }: VoiceQueryButtonProp
               <Text variant="bodySmall" style={styles.recordingText}>
                 {isRecording ? `Recording... ${recordingDuration}s (Tap to stop)` : 'Tap to record your question'}
               </Text>
-              
-              {/* Alternative: Use device's speech recognition */}
-              <Button
-                mode="outlined"
-                icon="keyboard"
-                onPress={() => {
-                  // This will open the device's speech recognition
-                  setQueryText('Tap here and speak, or use the mic button above');
-                }}
-                style={styles.altButton}
-                disabled={isRecording}
-              >
-                Or type your question
-              </Button>
             </View>
             
-            <TextInput
-              mode="outlined"
-              label="Your question"
-              value={queryText}
-              onChangeText={setQueryText}
-              placeholder="Tell me about this building..."
-              multiline
-              numberOfLines={3}
-              style={styles.textInput}
-              returnKeyType="default"
-            />
+            {/* Status Text */}
+            {queryText && (
+              <Text variant="bodySmall" style={styles.statusText}>
+                {queryText}
+              </Text>
+            )}
 
+            {/* Submit Button - Always visible but disabled when not ready */}
             <View style={styles.buttonContainer}>
               <Button
                 mode="contained"
                 onPress={handleSubmit}
                 style={[styles.button, styles.submitButton]}
                 loading={isProcessing}
-                disabled={!queryText.trim() || isProcessing || isRecording}
+                disabled={!queryText.trim() || isProcessing || isRecording || !isReadyToSubmit}
                 icon="send"
               >
-                {isProcessing ? 'Processing...' : 'Ask Roamly'}
+                {isProcessing ? 'Processing...' : isReadyToSubmit ? 'Submit Question' : 'Not Ready'}
               </Button>
             </View>
 
@@ -362,24 +367,24 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
   },
-  textInput: {
-    width: '100%',
-    marginBottom: 20,
-  },
   buttonContainer: {
     flexDirection: 'row',
     gap: 10,
     width: '100%',
     marginBottom: 10,
+    marginTop: 20,
   },
   button: {
     flex: 1,
   },
   submitButton: {
     backgroundColor: '#2196F3',
+    minHeight: 50,
   },
-  altButton: {
+  statusText: {
     marginTop: 10,
-    width: '100%',
+    textAlign: 'center',
+    color: '#666',
+    fontStyle: 'italic',
   },
 }); 

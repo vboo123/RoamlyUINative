@@ -50,12 +50,17 @@ export default function LandmarkDetail() {
     try {
       console.log('🎤 Fetching landmark response for:', landmarkId);  
       console.log("semanticKey", semanticKey);
+      
+      // Prepare interest array - convert single interest to array
+      const interestArray = user?.interestOne ? [user.interestOne] : ['Nature'];
+      
       const response = await axios.get('http://192.168.1.102:8000/landmark-response', {
         params: {
           landmark: landmarkId,
-          userCountry: user?.country || 'default',
-          interestOne: user?.interestOne || '', 
+          interest: interestArray,
+          userCountry: user?.country || 'United States',
           semanticKey,
+          age: user?.age || 25, // Add age parameter with default
         },
       });
 
@@ -67,6 +72,18 @@ export default function LandmarkDetail() {
 
       setTextResponse(semanticText);
       setError(null);
+      
+      // Log additional response data for debugging
+      console.log('✅ Landmark response received:', {
+        landmark: response.data.landmark,
+        country: response.data.country,
+        interest: response.data.interest,
+        age: response.data.age,
+        age_group: response.data.age_group,
+        extracted_details: response.data.extracted_details,
+        specific_youtubes: response.data.specific_youtubes
+      });
+      
     } catch (err: any) {
       console.error('❌ Error fetching landmark response:', err.message);
       setError('No matching response found for your preferences.');

@@ -148,12 +148,17 @@ export default function LandmarkDetail() {
         
         // Add user context if available - match backend parameter names
         if (user) {
-          formData.append('userCountry', user.country || 'default');
-          formData.append('interestOne', user.interestOne || '');
+          formData.append('userCountry', user.country || 'United States');
+          formData.append('interestOne', user.interestOne || 'Nature');
+          formData.append('userId', user.id || 'anonymous'); // Add userId
         } else {
-          formData.append('userCountry', 'default');
-          formData.append('interestOne', '');
+          formData.append('userCountry', 'United States');
+          formData.append('interestOne', 'Nature');
+          formData.append('userId', 'anonymous');
         }
+        
+        // Add sessionId for session management
+        formData.append('sessionId', `session_${Date.now()}`);
 
         console.log('🎤 FormData created, sending to backend...');
         console.log('🎤 Backend URL: http://192.168.1.102:8000/ask-landmark');
@@ -166,10 +171,20 @@ export default function LandmarkDetail() {
 
         console.log('✅ Audio query response:', response.data);
         
-        // Update the narrative with the response
-        if (response.data.response) {
-          setTextResponse(response.data.response);
+        // Update the narrative with the response - check for new structure
+        if (response.data.data?.answer) {
+          setTextResponse(response.data.data.answer);
           setError(null);
+          
+          // Log additional debug info
+          console.log('✅ Answer source:', response.data.data.source);
+          console.log('✅ Debug info:', response.data.debug);
+        } else if (response.data.data?.response) {
+          // Fallback to old structure
+          setTextResponse(response.data.data.response);
+          setError(null);
+        } else {
+          setError('No answer received from the server.');
         }
         
       } catch (error: any) {
@@ -186,8 +201,53 @@ export default function LandmarkDetail() {
       // Handle text-only query
       console.log('📝 Text query:', result.query);
       console.log('📝 No audio URI provided');
-      // You can add logic here to handle text queries
-      // For example, search for specific information or update the narrative
+      
+      // For text queries, we can send them as a question parameter
+      if (result.query.trim()) {
+        setIsProcessingVoiceQuery(true);
+        
+        try {
+          const formData = new FormData();
+          formData.append('landmark', landmarkId?.toString() || '');
+          formData.append('question', result.query.trim());
+          
+          if (user) {
+            formData.append('userCountry', user.country || 'United States');
+            formData.append('interestOne', user.interestOne || 'Nature');
+            formData.append('userId', user.id || 'anonymous');
+          } else {
+            formData.append('userCountry', 'United States');
+            formData.append('interestOne', 'Nature');
+            formData.append('userId', 'anonymous');
+          }
+          
+          formData.append('sessionId', `session_${Date.now()}`);
+
+          const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+
+          console.log('✅ Text query response:', response.data);
+          
+          if (response.data.data?.answer) {
+            setTextResponse(response.data.data.answer);
+            setError(null);
+          } else if (response.data.data?.response) {
+            setTextResponse(response.data.data.response);
+            setError(null);
+          } else {
+            setError('No answer received from the server.');
+          }
+          
+        } catch (error: any) {
+          console.error('❌ Error sending text query:', error);
+          setError('Failed to process text query. Please try again.');
+        } finally {
+          setIsProcessingVoiceQuery(false);
+        }
+      }
     }
   };
 

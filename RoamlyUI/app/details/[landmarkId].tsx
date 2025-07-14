@@ -150,11 +150,13 @@ export default function LandmarkDetail() {
         if (user) {
           formData.append('userCountry', user.country || 'United States');
           formData.append('interestOne', user.interestOne || 'Nature');
-          formData.append('userId', user.id || 'anonymous'); // Add userId
+          formData.append('userId', user.id || 'anonymous');
+          formData.append('userAge', user.age || 25); // Add userAge parameter
         } else {
           formData.append('userCountry', 'United States');
           formData.append('interestOne', 'Nature');
           formData.append('userId', 'anonymous');
+          formData.append('userAge', 25); // Default age for anonymous users
         }
         
         // Add sessionId for session management
@@ -215,10 +217,12 @@ export default function LandmarkDetail() {
             formData.append('userCountry', user.country || 'United States');
             formData.append('interestOne', user.interestOne || 'Nature');
             formData.append('userId', user.id || 'anonymous');
+            formData.append('userAge', user.age || 25); // Add userAge parameter
           } else {
             formData.append('userCountry', 'United States');
             formData.append('interestOne', 'Nature');
             formData.append('userId', 'anonymous');
+            formData.append('userAge', 25); // Default age for anonymous users
           }
           
           formData.append('sessionId', `session_${Date.now()}`);

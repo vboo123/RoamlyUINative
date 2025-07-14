@@ -1,8 +1,9 @@
+import VoiceQueryButton from '@/components/VoiceQueryButton';
 import { useAuth } from '@/hooks/useAuth';
 import axios from 'axios';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Speech from 'expo-speech';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ImageBackground,
   ScrollView,
@@ -36,6 +37,7 @@ export default function LandmarkDetail() {
   const [textResponse, setTextResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isProcessingVoiceQuery, setIsProcessingVoiceQuery] = useState(false);
 
   const semanticFollowups = [
     { label: 'Learn more about architecture', key: 'architecture.style' },
@@ -46,22 +48,23 @@ export default function LandmarkDetail() {
 
   const fetchResponse = async (semanticKey: string = 'origin.general') => {
     try {
-      const response = await axios.get('http://192.168.1.78:8000/landmark-response', {
+      console.log('🎤 Fetching landmark response for:', landmarkId);  
+      console.log("semanticKey", semanticKey);
+      
+      // Prepare interest array - convert single interest to array
+      const interestArray = user?.interestOne ? [user.interestOne] : ['Nature'];
+      
+      const response = await axios.get('http://192.168.1.102:8000/landmark-response', {
         params: {
           landmark: landmarkId,
-          userCountry: user?.country || 'default',
-          interestOne: user?.interestOne || '',
+          interest: interestArray,
+          userCountry: user?.country || 'United States',
           semanticKey,
+          age: user?.age || 25, // Add age parameter with default
         },
       });
 
-      const jsonUrl = response.data?.json_url;
-      if (!jsonUrl) {
-        throw new Error('No semantic JSON URL provided by backend.');
-      }
-
-      const jsonRes = await axios.get(jsonUrl);
-      const semanticText = jsonRes.data?.response;
+      const semanticText = response.data?.response;
 
       if (!semanticText) {
         throw new Error('No "response" field found in the JSON.');
@@ -69,6 +72,18 @@ export default function LandmarkDetail() {
 
       setTextResponse(semanticText);
       setError(null);
+      
+      // Log additional response data for debugging
+      console.log('✅ Landmark response received:', {
+        landmark: response.data.landmark,
+        country: response.data.country,
+        interest: response.data.interest,
+        age: response.data.age,
+        age_group: response.data.age_group,
+        extracted_details: response.data.extracted_details,
+        specific_youtubes: response.data.specific_youtubes
+      });
+      
     } catch (err: any) {
       console.error('❌ Error fetching landmark response:', err.message);
       setError('No matching response found for your preferences.');
@@ -98,6 +113,146 @@ export default function LandmarkDetail() {
   const stopAudioNarration = () => {
     Speech.stop();
     setIsPlaying(false);
+  };
+
+  const handleVoiceQuery = async (result: { query: string; audioUri?: string }) => {
+    console.log('🎤 Voice query result:', result);
+    console.log('🎤 Audio URI present:', !!result.audioUri);
+    console.log('🎤 Audio URI value:', result.audioUri);
+    
+    if (result.audioUri) {
+      setIsProcessingVoiceQuery(true);
+      
+      try {
+        console.log('🎤 Sending audio query to /ask-landmark route');
+        console.log('🎤 Landmark ID:', landmarkId);
+        console.log('🎤 Geohash:', geohash);
+        console.log('🎤 City:', city);
+        console.log('🎤 Country:', country);
+        
+        // Create form data for audio file upload
+        const formData = new FormData();
+        
+        // Log the audio file object being created
+        const audioFile = {
+          uri: result.audioUri,
+          type: 'audio/m4a', // Adjust based on your recording format
+          name: 'voice_query.m4a'
+        };
+        console.log('🎤 Audio file object:', audioFile);
+        
+        formData.append('audio_file', audioFile as any);
+        
+        // Add landmark context - match backend parameter names
+        formData.append('landmark', landmarkId?.toString() || '');
+        
+        // Add user context if available - match backend parameter names
+        if (user) {
+          formData.append('userCountry', user.country || 'United States');
+          formData.append('interestOne', user.interestOne || 'Nature');
+          formData.append('userId', user.id || 'anonymous');
+          formData.append('userAge', user.age || 25); // Add userAge parameter
+        } else {
+          formData.append('userCountry', 'United States');
+          formData.append('interestOne', 'Nature');
+          formData.append('userId', 'anonymous');
+          formData.append('userAge', 25); // Default age for anonymous users
+        }
+        
+        // Add sessionId for session management
+        formData.append('sessionId', `session_${Date.now()}`);
+
+        console.log('🎤 FormData created, sending to backend...');
+        console.log('🎤 Backend URL: http://192.168.1.102:8000/ask-landmark');
+
+        const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        console.log('✅ Audio query response:', response.data);
+        
+        // Update the narrative with the response - check for new structure
+        if (response.data.data?.answer) {
+          setTextResponse(response.data.data.answer);
+          setError(null);
+          
+          // Log additional debug info
+          console.log('✅ Answer source:', response.data.data.source);
+          console.log('✅ Debug info:', response.data.debug);
+        } else if (response.data.data?.response) {
+          // Fallback to old structure
+          setTextResponse(response.data.data.response);
+          setError(null);
+        } else {
+          setError('No answer received from the server.');
+        }
+        
+      } catch (error: any) {
+        console.error('❌ Error sending audio query:', error);
+        if (error.response) {
+          console.error('❌ Error response data:', error.response.data);
+          console.error('❌ Error response status:', error.response.status);
+        }
+        setError('Failed to process audio query. Please try again.');
+      } finally {
+        setIsProcessingVoiceQuery(false);
+      }
+    } else {
+      // Handle text-only query
+      console.log('📝 Text query:', result.query);
+      console.log('📝 No audio URI provided');
+      
+      // For text queries, we can send them as a question parameter
+      if (result.query.trim()) {
+        setIsProcessingVoiceQuery(true);
+        
+        try {
+          const formData = new FormData();
+          formData.append('landmark', landmarkId?.toString() || '');
+          formData.append('question', result.query.trim());
+          
+          if (user) {
+            formData.append('userCountry', user.country || 'United States');
+            formData.append('interestOne', user.interestOne || 'Nature');
+            formData.append('userId', user.id || 'anonymous');
+            formData.append('userAge', user.age || 25); // Add userAge parameter
+          } else {
+            formData.append('userCountry', 'United States');
+            formData.append('interestOne', 'Nature');
+            formData.append('userId', 'anonymous');
+            formData.append('userAge', 25); // Default age for anonymous users
+          }
+          
+          formData.append('sessionId', `session_${Date.now()}`);
+
+          const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+
+          console.log('✅ Text query response:', response.data);
+          
+          if (response.data.data?.answer) {
+            setTextResponse(response.data.data.answer);
+            setError(null);
+          } else if (response.data.data?.response) {
+            setTextResponse(response.data.data.response);
+            setError(null);
+          } else {
+            setError('No answer received from the server.');
+          }
+          
+        } catch (error: any) {
+          console.error('❌ Error sending text query:', error);
+          setError('Failed to process text query. Please try again.');
+        } finally {
+          setIsProcessingVoiceQuery(false);
+        }
+      }
+    }
   };
 
   const landmarkImage = `https://source.unsplash.com/600x300/?church,architecture`;
@@ -130,6 +285,11 @@ export default function LandmarkDetail() {
 
         {loading ? (
           <ActivityIndicator animating size="large" style={{ marginTop: 20 }} />
+        ) : isProcessingVoiceQuery ? (
+          <View style={{ marginTop: 20, alignItems: 'center' }}>
+            <ActivityIndicator animating size="large" />
+            <Text style={{ marginTop: 10, color: '#666' }}>Processing your voice query...</Text>
+          </View>
         ) : error ? (
           <Text style={{ color: 'red', marginTop: 20 }}>{error}</Text>
         ) : (
@@ -188,6 +348,10 @@ export default function LandmarkDetail() {
           </>
         )}
       </ScrollView>
+      
+      <VoiceQueryButton 
+        onQueryResult={handleVoiceQuery}
+      />
     </View>
   );
 }

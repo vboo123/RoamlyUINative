@@ -1,3 +1,4 @@
+import VoiceQueryButton from '@/components/VoiceQueryButton';
 import { useAuth } from '@/hooks/useAuth';
 import axios from 'axios';
 import * as Location from 'expo-location';
@@ -5,7 +6,7 @@ import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, TouchableOpacity } from 'react-native';
 import { ActivityIndicator, Card, Text, useTheme } from 'react-native-paper';
-import placeholder from '../../assets/images/favicon.png';
+// import placeholder from '../../assets/images/favicon.png';
 
 interface Property {
   landmarkName: string;
@@ -48,7 +49,7 @@ export default function ExploreScreen() {
         const location = await Location.getCurrentPositionAsync({});
         const { latitude, longitude } = location.coords;
 
-        const response = await axios.get('https://roamlyservice.onrender.com/get-properties/', {
+        const response = await axios.get('http://192.168.1.102:8000/get-properties/', {
           params: {
             lat: latitude,
             long: longitude,
@@ -86,23 +87,33 @@ export default function ExploreScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
-      {properties.map((item, index) => (
-        <TouchableOpacity
-          key={index}
-          onPress={() =>
-            router.push({
-              pathname: '/details/[landmarkId]',
-              params: { landmarkId: item.landmarkName, geohash: item.geohash, country: item.country, city: item.city },
-            })
-          }            
-                  >
-          <Card style={{ marginBottom: 16 }}>
-            <Card.Cover source={placeholder} />
-            <Card.Title title={item.landmarkName} />
-          </Card>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+    <>
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        {properties.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() =>
+              router.push({
+                pathname: '/details/[landmarkId]',
+                params: { landmarkId: item.landmarkName, geohash: item.geohash, country: item.country, city: item.city },
+              })
+            }            
+                    >
+            <Card style={{ marginBottom: 16 }}>
+              <Card.Cover source={{ uri: 'https://source.unsplash.com/600x300/?landmark,architecture' }} />
+              <Card.Title title={item.landmarkName} />
+            </Card>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+      
+      <VoiceQueryButton 
+        onQueryResult={(result) => {
+          console.log('🎤 Voice query result:', result);
+          // You can add logic here to handle the voice query
+          // For example, search for landmarks or navigate to results
+        }}
+      />
+    </>
   );
 }

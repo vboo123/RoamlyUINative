@@ -1,5 +1,6 @@
 import { AuthProvider } from '@/context/AuthContext'
 import { Slot } from 'expo-router'
+import { PaperProvider } from 'react-native-paper'
 
 export default function RootLayout() {
 
@@ -7,8 +8,10 @@ export default function RootLayout() {
 
 
   return (
-    <AuthProvider>
-      <Slot />
-    </AuthProvider>
+    <PaperProvider>
+      <AuthProvider>
+        <Slot />
+      </AuthProvider>
+    </PaperProvider>
   )
 }

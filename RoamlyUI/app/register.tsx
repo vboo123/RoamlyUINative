@@ -58,9 +58,9 @@ export default function Register() {
         
         // Fetch all options in parallel
         const [countriesRes, languagesRes, interestsRes] = await Promise.all([
-          axios.get<ApiResponse>('http://192.168.1.102:8000/countries/'),
-          axios.get<ApiResponse>('http://192.168.1.102:8000/languages/'),
-          axios.get<ApiResponse>('http://192.168.1.102:8000/interests/')
+          axios.get<ApiResponse>('https://roamlyservice.onrender.com/countries/'),
+          axios.get<ApiResponse>('https://roamlyservice.onrender.com/languages/'),
+          axios.get<ApiResponse>('https://roamlyservice.onrender.com/interests/')
         ]);
 
         // Map string arrays to { label, value } objects
@@ -158,7 +158,7 @@ export default function Register() {
 
       console.log('Sending registration payload:', payload);
 
-      const res = await axios.post('http://192.168.1.102:8000/register-user/', payload);
+      const res = await axios.post('https://roamlyservice.onrender.com/register-user/', payload);
 
       const userWithId = { ...payload, user_id: res.data.user_id };
       await login(userWithId.name, userWithId.email);

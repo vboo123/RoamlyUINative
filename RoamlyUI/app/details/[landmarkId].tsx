@@ -169,7 +169,7 @@ export default function LandmarkDetail() {
         // Add sessionId for session management
         formData.append('sessionId', `session_${Date.now()}`);
 
-      const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
+        const response = await axios.post('https://roamlyservice.onrender.com/ask-landmark', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -232,7 +232,7 @@ export default function LandmarkDetail() {
           
           formData.append('sessionId', `session_${Date.now()}`);
 
-          const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
+          const response = await axios.post('https://roamlyservice.onrender.com/ask-landmark', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
               ...(token ? { Authorization: `Bearer ${token}` } : {}),

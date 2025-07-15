@@ -83,7 +83,7 @@ export const LandmarkProvider = ({ children }: { children: React.ReactNode }) =>
       console.log('📍 Fetching landmarks for location:', { latitude, longitude });
 
       // Fetch nearby landmarks
-      const response = await axios.get('http://192.168.1.102:8000/get-properties/', {
+      const response = await axios.get('https://roamlyservice.onrender.com/get-properties/', {
         params: {
           lat: latitude,
           long: longitude,

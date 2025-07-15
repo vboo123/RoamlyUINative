@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (name: string, email: string) => {
     setLoading(true);
     try {
-      const res = await axios.post('http://192.168.1.102:8000/login/', null, {
+      const res = await axios.post('https://roamlyservice.onrender.com/login/', null, {
         params: { name, email }
       });
       // Expecting: { user: {...}, token: "..." }

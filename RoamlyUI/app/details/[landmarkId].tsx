@@ -266,7 +266,7 @@ export default function LandmarkDetail() {
         <Appbar.BackAction onPress={() => router.back()} />
         <Appbar.Content
           title={landmarkId?.toString().replace(/_/g, ' ')}
-          subtitle={`${city}, ${country}`}
+          subtitle={city && country ? `${city}, ${country}` : undefined}
         />
       </Appbar.Header>
 
@@ -284,7 +284,9 @@ export default function LandmarkDetail() {
               <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>
                 {landmarkId?.toString().replace(/_/g, ' ')}
               </Text>
-              <Text style={{ color: 'white', fontSize: 14 }}>{`${city}, ${country}`}</Text>
+              {city && country && (
+                <Text style={{ color: 'white', fontSize: 14 }}>{`${city}, ${country}`}</Text>
+              )}
             </View>
           </View>
         </ImageBackground>

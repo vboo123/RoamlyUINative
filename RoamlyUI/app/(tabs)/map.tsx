@@ -25,7 +25,7 @@ export default function MapScreen() {
   const handleMarkerPress = (landmark: any) => {
     Alert.alert(
       landmark.landmarkName,
-      `Located in ${landmark.city}, ${landmark.country}`,
+      undefined, // No description text
       [
         {
           text: 'Cancel',
@@ -149,7 +149,10 @@ export default function MapScreen() {
               longitude: landmark.longitude,
             }}
             title={landmark.landmarkName}
-            description={`${landmark.city}, ${landmark.country}`}
+            description={landmark.city && landmark.country 
+              ? `${landmark.city}, ${landmark.country}`
+              : 'Location not available'
+            }
             pinColor={colorScheme === 'dark' ? '#ff6b6b' : '#e74c3c'}
             onPress={() => handleMarkerPress(landmark)}
           />

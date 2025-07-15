@@ -24,7 +24,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LandmarkDetail() {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const theme = useTheme();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
@@ -68,6 +68,7 @@ export default function LandmarkDetail() {
           semanticKey,
           age: user?.age || 25, // Add age parameter with default
         },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       const semanticText = response.data?.response;
@@ -168,9 +169,10 @@ export default function LandmarkDetail() {
         // Add sessionId for session management
         formData.append('sessionId', `session_${Date.now()}`);
 
-        const response = await axios.post('https://roamlyservice.onrender.com/ask-landmark', formData, {
+      const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });
 
@@ -230,9 +232,10 @@ export default function LandmarkDetail() {
           
           formData.append('sessionId', `session_${Date.now()}`);
 
-          const response = await axios.post('https://roamlyservice.onrender.com/ask-landmark', formData, {
+          const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
           });
 

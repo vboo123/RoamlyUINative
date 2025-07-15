@@ -30,7 +30,7 @@ const LandmarkContext = createContext<LandmarkContextType>({
 });
 
 export const LandmarkProvider = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +83,7 @@ export const LandmarkProvider = ({ children }: { children: React.ReactNode }) =>
       console.log('📍 Fetching landmarks for location:', { latitude, longitude });
 
       // Fetch nearby landmarks
-      const response = await axios.get('https://roamlyservice.onrender.com/get-properties/', {
+      const response = await axios.get('http://192.168.1.102:8000/get-properties/', {
         params: {
           lat: latitude,
           long: longitude,
@@ -92,6 +92,7 @@ export const LandmarkProvider = ({ children }: { children: React.ReactNode }) =>
           userCountry: user.country,
           userLanguage: user.language,
         },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       console.log('✅ Landmarks fetched:', response.data.properties?.length || 0, 'landmarks');

@@ -262,13 +262,9 @@ export default function LandmarkDetail() {
 
   return (
     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: colors.background }}>
-      <Appbar.Header elevated>
+      <View style={{ flexDirection: 'row', alignItems: 'center', height: 44, backgroundColor: 'transparent' }}>
         <Appbar.BackAction onPress={() => router.back()} />
-        <Appbar.Content
-          title={landmarkId?.toString().replace(/_/g, ' ')}
-          subtitle={city && country ? `${city}, ${country}` : undefined}
-        />
-      </Appbar.Header>
+      </View>
 
       <ScrollView 
         contentContainerStyle={{ padding: 16 }}

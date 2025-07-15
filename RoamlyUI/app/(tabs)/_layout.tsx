@@ -41,6 +41,14 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Explore',
+          tabBarIcon: ({ color, size }) => (
+            <IconButton
+              icon="compass"
+              iconColor={color}
+              size={size}
+              style={{ margin: 0 }}
+            />
+          ),
           headerRight: () => (
             <IconButton
               icon="logout"
@@ -50,6 +58,20 @@ export default function TabsLayout() {
               }}
               accessibilityLabel="Log out"
               iconColor={theme.colors.onSurface}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Map',
+          tabBarIcon: ({ color, size }) => (
+            <IconButton
+              icon="map"
+              iconColor={color}
+              size={size}
+              style={{ margin: 0 }}
             />
           ),
         }}

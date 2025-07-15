@@ -54,7 +54,7 @@ export default function LandmarkDetail() {
       // Prepare interest array - convert single interest to array
       const interestArray = user?.interestOne ? [user.interestOne] : ['Nature'];
       
-      const response = await axios.get('http://192.168.1.102:8000/landmark-response', {
+      const response = await axios.get('https://roamlyservice.onrender.com/landmark-response/', {
         params: {
           landmark: landmarkId,
           interest: interestArray,
@@ -162,10 +162,7 @@ export default function LandmarkDetail() {
         // Add sessionId for session management
         formData.append('sessionId', `session_${Date.now()}`);
 
-        console.log('🎤 FormData created, sending to backend...');
-        console.log('🎤 Backend URL: http://192.168.1.102:8000/ask-landmark');
-
-        const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
+        const response = await axios.post('https://roamlyservice.onrender.com/ask-landmark', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -227,7 +224,7 @@ export default function LandmarkDetail() {
           
           formData.append('sessionId', `session_${Date.now()}`);
 
-          const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
+          const response = await axios.post('https://roamlyservice.onrender.com/ask-landmark', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },

@@ -1,7 +1,7 @@
 import { useAuthContext } from '@/context/AuthContext'
 
 export const useAuth = () => {
-  const { user, login, logout, loading } = useAuthContext()
+  const { user, token, login, logout, loading } = useAuthContext()
 
-  return { user, login, logout, loading }
+  return { user, token, login, logout, loading }
 }

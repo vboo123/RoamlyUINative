@@ -1,5 +1,7 @@
 import VoiceQueryButton from '@/components/VoiceQueryButton';
+import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/hooks/useAuth';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import axios from 'axios';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Speech from 'expo-speech';
@@ -16,12 +18,16 @@ import {
   Button,
   Card,
   Text,
+  useTheme,
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LandmarkDetail() {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const theme = useTheme();
+  const colorScheme = useColorScheme() ?? 'light';
+  const colors = Colors[colorScheme];
   const params = useLocalSearchParams();
 
   const [landmarkMeta, setLandmarkMeta] = useState({
@@ -54,7 +60,7 @@ export default function LandmarkDetail() {
       // Prepare interest array - convert single interest to array
       const interestArray = user?.interestOne ? [user.interestOne] : ['Nature'];
       
-      const response = await axios.get('http://192.168.1.102:8000/landmark-response', {
+      const response = await axios.get('https://roamlyservice.onrender.com/landmark-response/', {
         params: {
           landmark: landmarkId,
           interest: interestArray,
@@ -62,6 +68,7 @@ export default function LandmarkDetail() {
           semanticKey,
           age: user?.age || 25, // Add age parameter with default
         },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       const semanticText = response.data?.response;
@@ -150,24 +157,22 @@ export default function LandmarkDetail() {
         if (user) {
           formData.append('userCountry', user.country || 'United States');
           formData.append('interestOne', user.interestOne || 'Nature');
-          formData.append('userId', user.id || 'anonymous');
-          formData.append('userAge', user.age || 25); // Add userAge parameter
+                      formData.append('userId', user.user_id || 'anonymous');
+          formData.append('userAge', (user.age || 25).toString()); // Add userAge parameter
         } else {
           formData.append('userCountry', 'United States');
           formData.append('interestOne', 'Nature');
           formData.append('userId', 'anonymous');
-          formData.append('userAge', 25); // Default age for anonymous users
+          formData.append('userAge', '25'); // Default age for anonymous users
         }
         
         // Add sessionId for session management
         formData.append('sessionId', `session_${Date.now()}`);
 
-        console.log('🎤 FormData created, sending to backend...');
-        console.log('🎤 Backend URL: http://192.168.1.102:8000/ask-landmark');
-
-        const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
+        const response = await axios.post('https://roamlyservice.onrender.com/ask-landmark', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });
 
@@ -216,20 +221,21 @@ export default function LandmarkDetail() {
           if (user) {
             formData.append('userCountry', user.country || 'United States');
             formData.append('interestOne', user.interestOne || 'Nature');
-            formData.append('userId', user.id || 'anonymous');
-            formData.append('userAge', user.age || 25); // Add userAge parameter
+            formData.append('userId', user.user_id || 'anonymous');
+            formData.append('userAge', (user.age || 25).toString()); // Add userAge parameter
           } else {
             formData.append('userCountry', 'United States');
             formData.append('interestOne', 'Nature');
             formData.append('userId', 'anonymous');
-            formData.append('userAge', 25); // Default age for anonymous users
+            formData.append('userAge', '25'); // Default age for anonymous users
           }
           
           formData.append('sessionId', `session_${Date.now()}`);
 
-          const response = await axios.post('http://192.168.1.102:8000/ask-landmark', formData, {
+          const response = await axios.post('https://roamlyservice.onrender.com/ask-landmark', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
           });
 
@@ -258,16 +264,15 @@ export default function LandmarkDetail() {
   const landmarkImage = `https://source.unsplash.com/600x300/?church,architecture`;
 
   return (
-    <View style={{ flex: 1, paddingTop: insets.top }}>
-      <Appbar.Header elevated>
+    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: colors.background }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', height: 44, backgroundColor: 'transparent' }}>
         <Appbar.BackAction onPress={() => router.back()} />
-        <Appbar.Content
-          title={landmarkId?.toString().replace(/_/g, ' ')}
-          subtitle={`${city}, ${country}`}
-        />
-      </Appbar.Header>
+      </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView 
+        contentContainerStyle={{ padding: 16 }}
+        style={{ backgroundColor: colors.background }}
+      >
         <ImageBackground
           source={{ uri: landmarkImage }}
           style={{ height: 220, borderRadius: 16, overflow: 'hidden' }}
@@ -278,26 +283,52 @@ export default function LandmarkDetail() {
               <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>
                 {landmarkId?.toString().replace(/_/g, ' ')}
               </Text>
-              <Text style={{ color: 'white', fontSize: 14 }}>{`${city}, ${country}`}</Text>
+              {city && country && (
+                <Text style={{ color: 'white', fontSize: 14 }}>{`${city}, ${country}`}</Text>
+              )}
             </View>
           </View>
         </ImageBackground>
 
         {loading ? (
-          <ActivityIndicator animating size="large" style={{ marginTop: 20 }} />
+          <ActivityIndicator 
+            animating size="large" 
+            style={{ marginTop: 20 }}
+            color={colors.tint}
+          />
         ) : isProcessingVoiceQuery ? (
           <View style={{ marginTop: 20, alignItems: 'center' }}>
-            <ActivityIndicator animating size="large" />
-            <Text style={{ marginTop: 10, color: '#666' }}>Processing your voice query...</Text>
+            <ActivityIndicator animating size="large" color={colors.tint} />
+            <Text style={{ marginTop: 10, color: colors.text }}>
+              Processing your voice query...
+            </Text>
           </View>
         ) : error ? (
-          <Text style={{ color: 'red', marginTop: 20 }}>{error}</Text>
+          <Text style={{ color: colors.error, marginTop: 20 }}>{error}</Text>
         ) : (
           <>
-            <Card style={{ marginTop: 20, backgroundColor: '#f9f4ff' }}>
+            <Card 
+              style={{ 
+                marginTop: 20, 
+                backgroundColor: colorScheme === 'dark' ? colors.surfaceVariant : '#f9f4ff',
+                borderColor: colors.cardBorder,
+                borderWidth: 1,
+              }}
+            >
               <Card.Content>
-                <Text variant="titleMedium" style={{ marginBottom: 8, fontWeight: '600' }}>Narrative:</Text>
-                <Text style={{ lineHeight: 20 }}>{textResponse}</Text>
+                <Text 
+                  variant="titleMedium" 
+                  style={{ 
+                    marginBottom: 8, 
+                    fontWeight: '600',
+                    color: colors.text 
+                  }}
+                >
+                  Narrative:
+                </Text>
+                <Text style={{ lineHeight: 20, color: colors.text }}>
+                  {textResponse}
+                </Text>
 
                 <Button
                   icon="volume-high"
@@ -322,7 +353,15 @@ export default function LandmarkDetail() {
               </Card.Content>
             </Card>
 
-            <Text variant="titleMedium" style={{ marginTop: 24, marginBottom: 10, fontWeight: '600' }}>
+            <Text 
+              variant="titleMedium" 
+              style={{ 
+                marginTop: 24, 
+                marginBottom: 10, 
+                fontWeight: '600',
+                color: colors.text 
+              }}
+            >
               Follow-up Questions:
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
@@ -337,11 +376,17 @@ export default function LandmarkDetail() {
                     paddingVertical: 8,
                     paddingHorizontal: 14,
                     borderRadius: 20,
-                    backgroundColor: '#e3f2fd',
+                    backgroundColor: colorScheme === 'dark' ? colors.surface : '#e3f2fd',
                     margin: 4,
+                    borderColor: colors.cardBorder,
+                    borderWidth: 1,
                   }}
                 >
-                  <Text style={{ color: '#1e88e5' }}>{item.label}</Text>
+                  <Text style={{ 
+                    color: colorScheme === 'dark' ? colors.tint : '#1e88e5' 
+                  }}>
+                    {item.label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>

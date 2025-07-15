@@ -1,4 +1,6 @@
+import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/hooks/useAuth';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import axios from 'axios';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
@@ -20,6 +22,8 @@ interface Property {
 export default function ExploreScreen() {
   const { user } = useAuth();
   const theme = useTheme();
+  const colorScheme = useColorScheme() ?? 'light';
+  const colors = Colors[colorScheme];
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState<Property[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -74,19 +78,48 @@ export default function ExploreScreen() {
   }, [user]);
 
   if (loading) {
-    return <ActivityIndicator animating={true} size="large" style={{ marginTop: 100 }} />;
+    return (
+      <ActivityIndicator 
+        animating={true} 
+        size="large" 
+        style={{ marginTop: 100 }} 
+        color={colors.tint}
+      />
+    );
   }
 
   if (error) {
-    return <Text style={{ marginTop: 100, textAlign: 'center', color: theme.colors.error }}>{error}</Text>;
+    return (
+      <Text style={{ 
+        marginTop: 100, 
+        textAlign: 'center', 
+        color: colors.error 
+      }}>
+        {error}
+      </Text>
+    );
   }
 
   if (properties.length === 0) {
-    return <Text style={{ marginTop: 100, textAlign: 'center' }}>No landmarks found near you.</Text>;
+    return (
+      <Text style={{ 
+        marginTop: 100, 
+        textAlign: 'center',
+        color: colors.text 
+      }}>
+        No landmarks found near you.
+      </Text>
+    );
   }
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
+    <ScrollView 
+      contentContainerStyle={{ 
+        padding: 16,
+        backgroundColor: colors.background 
+      }}
+      style={{ backgroundColor: colors.background }}
+    >
       {properties.map((item, index) => (
         <TouchableOpacity
           key={index}
@@ -97,9 +130,19 @@ export default function ExploreScreen() {
             })
           }            
                   >
-          <Card style={{ marginBottom: 16 }}>
+          <Card 
+            style={{ 
+              marginBottom: 16,
+              backgroundColor: colors.card,
+              borderColor: colors.cardBorder,
+              borderWidth: 1,
+            }}
+          >
             <Card.Cover source={{ uri: 'https://source.unsplash.com/600x300/?landmark,architecture' }} />
-            <Card.Title title={item.landmarkName} />
+            <Card.Title 
+              title={item.landmarkName}
+              titleStyle={{ color: colors.text }}
+            />
           </Card>
         </TouchableOpacity>
       ))}

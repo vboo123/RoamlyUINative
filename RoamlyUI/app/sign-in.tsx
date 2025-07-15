@@ -1,15 +1,15 @@
 // app/sign-in.tsx
+import { useAuth } from '@/hooks/useAuth';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import {
-  TextInput,
-  Button,
-  Text,
-  ActivityIndicator,
-  useTheme
+    ActivityIndicator,
+    Button,
+    Text,
+    TextInput,
+    useTheme
 } from 'react-native-paper';
-import { useAuth } from '@/hooks/useAuth';
-import { router } from 'expo-router';
 
 export default function SignIn() {
   const { login, loading } = useAuth();
@@ -37,8 +37,8 @@ export default function SignIn() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}>
-      <Text variant="headlineMedium" style={{ marginBottom: 20, textAlign: 'center' }}>
+    <View style={{ flex: 1, justifyContent: 'center', padding: 24, backgroundColor: theme.colors.background }}>
+      <Text variant="headlineMedium" style={{ marginBottom: 20, textAlign: 'center', color: theme.colors.onBackground }}>
         Sign In to Roamly
       </Text>
 
@@ -48,6 +48,7 @@ export default function SignIn() {
         onChangeText={setName}
         mode="outlined"
         style={{ marginBottom: 16 }}
+        theme={{ colors: { text: theme.colors.onSurface, background: theme.colors.surface, primary: theme.colors.primary, placeholder: theme.colors.onSurface } }}
       />
 
       <TextInput
@@ -62,6 +63,7 @@ export default function SignIn() {
         autoCapitalize="none"
         error={!!emailError}
         style={{ marginBottom: 4 }}
+        theme={{ colors: { text: theme.colors.onSurface, background: theme.colors.surface, primary: theme.colors.primary, placeholder: theme.colors.onSurface } }}
       />
       {emailError ? <Text style={{ color: theme.colors.error, marginBottom: 12 }}>{emailError}</Text> : null}
 
@@ -72,6 +74,8 @@ export default function SignIn() {
         onPress={handleLogin}
         loading={loading}
         disabled={loading || !name || !email || !!emailError}
+        style={{ backgroundColor: theme.colors.primary }}
+        labelStyle={{ color: theme.colors.onPrimary }}
       >
         {loading ? 'Signing In...' : 'Sign In'}
       </Button>
@@ -81,12 +85,13 @@ export default function SignIn() {
         mode="text"
         onPress={() => router.push('/register')}
         style={{ marginTop: 16 }}
+        labelStyle={{ color: theme.colors.primary }}
       >
         Don't have an account? Register
       </Button>
 
 
-      {loading && <ActivityIndicator animating={true} style={{ marginTop: 20 }} />}
+      {loading && <ActivityIndicator animating={true} style={{ marginTop: 20 }} color={theme.colors.primary} />}
     </View>
   );
 }

@@ -1,4 +1,3 @@
-import VoiceQueryButton from '@/components/VoiceQueryButton';
 import { useAuth } from '@/hooks/useAuth';
 import axios from 'axios';
 import * as Location from 'expo-location';
@@ -87,33 +86,23 @@ export default function ExploreScreen() {
   }
 
   return (
-    <>
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        {properties.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={() =>
-              router.push({
-                pathname: '/details/[landmarkId]',
-                params: { landmarkId: item.landmarkName, geohash: item.geohash, country: item.country, city: item.city },
-              })
-            }            
-                    >
-            <Card style={{ marginBottom: 16 }}>
-              <Card.Cover source={{ uri: 'https://source.unsplash.com/600x300/?landmark,architecture' }} />
-              <Card.Title title={item.landmarkName} />
-            </Card>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-      
-      <VoiceQueryButton 
-        onQueryResult={(result) => {
-          console.log('🎤 Voice query result:', result);
-          // You can add logic here to handle the voice query
-          // For example, search for landmarks or navigate to results
-        }}
-      />
-    </>
+    <ScrollView contentContainerStyle={{ padding: 16 }}>
+      {properties.map((item, index) => (
+        <TouchableOpacity
+          key={index}
+          onPress={() =>
+            router.push({
+              pathname: '/details/[landmarkId]',
+              params: { landmarkId: item.landmarkName, geohash: item.geohash, country: item.country, city: item.city },
+            })
+          }            
+                  >
+          <Card style={{ marginBottom: 16 }}>
+            <Card.Cover source={{ uri: 'https://source.unsplash.com/600x300/?landmark,architecture' }} />
+            <Card.Title title={item.landmarkName} />
+          </Card>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
   );
 }

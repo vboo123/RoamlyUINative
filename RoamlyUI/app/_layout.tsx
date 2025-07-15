@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/Colors'
 import { AuthProvider } from '@/context/AuthContext'
+import { LandmarkProvider } from '@/context/LandmarkContext'
 import { useColorScheme } from '@/hooks/useColorScheme'
 import { Slot } from 'expo-router'
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper'
@@ -46,7 +47,9 @@ export default function RootLayout() {
   return (
     <PaperProvider theme={theme}>
       <AuthProvider>
-        <Slot />
+        <LandmarkProvider>
+          <Slot />
+        </LandmarkProvider>
       </AuthProvider>
     </PaperProvider>
   )

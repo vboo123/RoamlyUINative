@@ -1,81 +1,19 @@
 import { Colors } from '@/constants/Colors';
+import { useLandmarks } from '@/context/LandmarkContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import axios from 'axios';
-import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ScrollView, TouchableOpacity } from 'react-native';
 import { ActivityIndicator, Card, Text, useTheme } from 'react-native-paper';
 // import placeholder from '../../assets/images/favicon.png';
-
-interface Property {
-  landmarkName: string;
-  city: string;
-  country: string;
-  latitude: number;
-  longitude: number;
-  geohash: string;
-  responses: Record<string, string>;
-}
 
 export default function ExploreScreen() {
   const { user } = useAuth();
   const theme = useTheme();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
-  const [loading, setLoading] = useState(true);
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchLandmarks = async () => {
-      if (
-        !user ||
-        !user.age ||
-        !user.country ||
-        !user.language ||
-        !user.interestOne
-      ) {
-        setError('Missing user preferences. Please update your profile.');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setError('Location permission denied');
-          return;
-        }
-
-        const location = await Location.getCurrentPositionAsync({});
-        const { latitude, longitude } = location.coords;
-
-        const response = await axios.get('https://roamlyservice.onrender.com/get-properties/', {
-          params: {
-            lat: latitude,
-            long: longitude,
-            interestOne: user.interestOne,
-            userAge: user.age,
-            userCountry: user.country,
-            userLanguage: user.language,
-          },
-        });
-
-        console.log(response.data)
-
-        setProperties(response.data.properties || []);
-      } catch (err) {
-        console.error('❌ Failed to fetch landmarks', err);
-        setError('Failed to fetch landmarks. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLandmarks();
-  }, [user]);
+  const { properties, loading, error, refreshLandmarks } = useLandmarks();
 
   if (loading) {
     return (
